@@ -50,7 +50,7 @@ void posDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
 }
 
 // Funcion callback para mensajes del topico vels_des
-void posDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
+void velsDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
     x_punto_des = msg -> linear.x;
     y_punto_des = msg -> linear.y;
@@ -59,7 +59,7 @@ void posDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
 }
 
 // Funcion callback para los valores de posicion reales
-void posDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
+void posRealCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
     x_real = msg -> linear.x;
     y_real = msg -> linear.y;
@@ -70,7 +70,7 @@ void posDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
 }
 
 // Funcion callback para los valores de velocidad real
-void posDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
+void velRealCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
     x_punto_real = msg -> linear.x;
     y_punto_real = msg -> linear.y;
@@ -88,13 +88,13 @@ int main(int argc, char **argv)
     ros::Subscriber pos_sub = nh3.subscribe("/pos_des", 100, posDesCallback);
 
     // Subscripcion al topico de velocidad angular deseada
-    ros::Subscriber vels_sub = nh3.subscribe("/vels_des", 100, rotDesCallback);
+    ros::Subscriber vels_sub = nh3.subscribe("/vels_des", 100, velsDesCallback);
 
     // Subscripcion al topico de posiciones reales
-    ros::Subscriber pos_real_sub = nh3.subscribe("/pos_real", 100, rotDesCallback);
+    ros::Subscriber pos_real_sub = nh3.subscribe("/pos_real", 100, posRealCallback);
     
     // Subscripcion al topico de velocidades reales
-    ros::Subscriber vels_real_sub = nh3.subscribe("/vels_real", 100, rotDesCallback);
+    ros::Subscriber vels_real_sub = nh3.subscribe("/vels_real", 100, velRealCallback);
 
     // Publicacion del valor del thrust al topico "thrust"
     ros::Publisher thrust_pub = nh3.advertise<std_msgs::Float32>("/thrust", 100);
