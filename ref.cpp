@@ -16,7 +16,7 @@ double step = 0.01;
 
 // Funciones de referencia
 double x_punto_ref(double t) {
-    if (t > 0  && t < 5) {
+    if (t < 5) {
         return 0;
     } else if (t >= 5 && t <= 65) {
         return 0.5 * sin(0.1 * (t - 5));
@@ -26,7 +26,7 @@ double x_punto_ref(double t) {
 }
 
 double y_punto_ref(double t) {
-    if (t > 0  && t < 5) {
+    if (t < 5) {
         return 0;
     } else if (t >= 5 && t <= 65) {
         return 0.5 * cos(0.1 * (t - 5));
@@ -36,7 +36,7 @@ double y_punto_ref(double t) {
 }
 
 double z_punto_ref(double t) {
-    if (t > 0  && t < 5) {
+    if (t < 5) {
         return -0.5;
     }
    else {
@@ -45,7 +45,7 @@ double z_punto_ref(double t) {
 }
 
 double yaw_punto_ref(double t) {
-    if (t > 0  && t < 5) {
+    if (t < 5) {
         return 0;
     } else {
         return 0.1;
@@ -62,19 +62,9 @@ int main(int argc, char **argv) {
     ros::Rate loop_rate(100); 
 
     double t = 0;
-    while (ros::ok()) {`
-        geometry_msgs::Twist vels_des;
-        geometry_msgs::Twist pos_des;
-
-        // Condiciones iniciales 
-        if (t == 0) {
-            x_des = -5;
-            y_des = 0;
-            z_des = 0;
-            yaw_des = 0;
-            roll_des = 0;
-            pitch_des = 0;
-        }
+    while (ros::ok()) {
+        geometry_msgs::Twist vels_des_var;
+        geometry_msgs::Twist pos_des_var;
 
         // Calcular las referencias de velocidades (roll y pitch = 0)
         double x_punto_des = x_punto_ref(t);
@@ -89,20 +79,20 @@ int main(int argc, char **argv) {
         yaw_des += step*yaw_punto_des;
 
         // Publicar las velocidades lineales y angular
-        vels_des.linear.x = x_punto_des;
-        vels_des.linear.y = y_punto_des;
-        vels_des.linear.z = z_punto_des;
-        vels_des.angular.x = 0; // velocidad = 0, ya que la posicion queremos que sea 0
-        vels_des.angular.y = 0; // velocidad = 0, ya que la posicion queremos que sea 0
-        vels_des.angular.z = yaw_punto_des;
-        velocity_pub.publish(vels_des);
+        vels_des_var.linear.x = x_punto_des;
+        vels_des_var.linear.y = y_punto_des;
+        vels_des_var.linear.z = z_punto_des;
+        vels_des_var.angular.x = 0; // velocidad = 0, ya que la posicion queremos que sea 0
+        vels_des_var.angular.y = 0; // velocidad = 0, ya que la posicion queremos que sea 0
+        vels_des_var.angular.z = yaw_punto_des;
+        velocity_pub.publish(vels_des_var);
 
         // Publicar posiciones y yaw
-        pos_des.linear.x = x_des;
-        pos_des.linear.y = y_des;
-        pos_des.linear.z = z_des;
-        pos_des.angular.z = yaw_des;
-        position_pub.publish(pos_des);
+        pos_des_var.linear.x = x_des;
+        pos_des_var.linear.y = y_des;
+        pos_des_var.linear.z = z_des;
+        pos_des_var.angular.z = yaw_des;
+        position_pub.publish(pos_des_var);
 
         ros::spinOnce();
         loop_rate.sleep();
