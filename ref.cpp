@@ -1,3 +1,4 @@
+//Alan es un pendejo
 /*              NODO DE REFERENCIAS
 Este nodo envia la posicion, velocidad deseadas (lineales y angulares), incluyendo condiciones inciales.
 **Falta incluir condicion para cuando acabe trayectoria ciruclar reiniciar tiempo y que las condiciones de xyz_punto_ref sean utiles
