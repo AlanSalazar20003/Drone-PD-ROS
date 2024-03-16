@@ -33,9 +33,14 @@ int pitch2 = 0;
 int yaw2 = 0;
 
 // Funcion callback para mensajes del topico pos_des angulares
-void angDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
+void pitchRollDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
-  ang_d << msg->angular.x, msg->angular.y, msg->angular.z;
+    ang_d(0) = msg->angular.x;
+    ang_d(1) = msg->angular.y;
+}
+void yawDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
+{
+    ang_d(2) = msg->angular.z;
 }
 
 // Funcion callback para mensajes del topico vels_des angulares
@@ -62,7 +67,8 @@ int main(int argc, char **argv)
   ros::NodeHandle nh3;
 
   // Subscripcion al topico de posicion angular deseada 
-  ros::Subscriber ang_des_sub = nh3.subscribe("/ang_des", 100, angDesCallback);
+  ros::Subscriber pitchRoll_des_sub = nh3.subscribe("/ang_des", 100, pitchRollDesCallback);
+  ros::Subscriber yaw_des_sub = nh3.subscribe("/pos_des", 100, yawDesCallback);
 
   // Subscripcion al topico de velocidad angular deseada
   ros::Subscriber vels_des_sub = nh3.subscribe("/vels_des", 100, velsDesCallback);
@@ -79,6 +85,8 @@ int main(int argc, char **argv)
   ros::Rate loop_rate(100);
 
   while(ros::ok){
+    geometry_msgs::Vector3 torque_var;
+
     // Calculos de errores
     double ex_ang = rot_r(0) - ang_d(0); 
     double ey_ang = rot_r(1) - ang_d(1);
@@ -97,11 +105,11 @@ int main(int argc, char **argv)
     double Ty = jyy * (((jxx - jzz) / jyy * rot_punto_r(0) * rot_punto_r(2)) + pitch2 + uy);
     double Tz = jzz * (((jyy - jxx) / jzz * rot_punto_r(0) * rot_punto_r(1)) + yaw2 + uz);
 
-    // Publicar posiciones y yaw
-    torque.x = Tx;
-    torque.y = Ty;
-    torque.z = Tz;
-    torque_pub.publish(torque);
+    // Publicar torques
+    torque_var.x = Tx;
+    torque_var.y = Ty;
+    torque_var.z = Tz;
+    torque_pub.publish(torque_var);
 
     ros::spinOnce();
     loop_rate.sleep();
@@ -109,3 +117,4 @@ int main(int argc, char **argv)
 
   return 0;
 }
+
