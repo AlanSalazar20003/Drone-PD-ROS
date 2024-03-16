@@ -1,0 +1,42 @@
+/*              NODO DE CONTROL ANGULAR 
+Este nodo recibe posiciones angulares deseadas (roll, pitch y yaw), velocidades angulares deseadas orientacion del dorne y velocidad angulare real del drone. Con ello calcula los torques necsarios para la dinamico.
+*/
+#include "ros/ros.h"
+#include "geometry_msgs/Twist.h"
+#include <cmath>
+#include <eigen3/Eigen/Dense>
+
+// Funcion callback para mensajes del topico rot_des
+void rotDesCallback(const geometry_msgs::Vector3::ConstPtr& msg)
+{
+  Eigen::Vector3d rot_des;
+  rot_des << msg->x, msg->y, msg->z;
+}
+
+
+int main(int argc, char **argv)
+{
+  ros::init(argc, argv, "angular_control");
+  ros::NodeHandle nh3;
+
+  // Subscripcion al topico de posicion angular deseada 
+  ros::Subscriber sub = nh3.subscribe("pos_des", 100, rotDesCallback);
+
+  // Subscripcion al topico de velocidad angular deseada
+  ros::Subscriber sub = nh3.subscribe("vels_des", 100, rotDesCallback);
+
+  // Subscripcion al topico de pitch, roll y yaw calculados en el control de posicion lineal
+  ros::Subscriber sub = nh3.subscribe("rot_des", 100, rotDesCallback);
+
+  ros::Rate loop_rate(100);
+  double t = 0;
+  while(ros::ok){
+    // Calculos de torques deseados 
+
+    ros::spinOnce();
+    loop_rate.sleep();
+    t += loop_rate.expectedCycleTime().toSec(); // Incrementa el tiempo en función de la frecuencia, si no sirve cambiar a t+=0.01;
+  }
+
+  return 0;
+}
