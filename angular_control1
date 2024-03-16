@@ -101,7 +101,7 @@ int main(int argc, char **argv)
     torque.x = Tx;
     torque.y = Ty;
     torque.z = Tz;
-    torque_pub.publish(pos_des);
+    torque_pub.publish(torque);
 
     ros::spinOnce();
     loop_rate.sleep();
