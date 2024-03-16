@@ -1,10 +1,8 @@
-//Alan es un pendejo
 /*              NODO DE REFERENCIAS
 Este nodo envia la posicion, velocidad deseadas (lineales y angulares), incluyendo condiciones inciales.
 **Falta incluir condicion para cuando acabe trayectoria ciruclar reiniciar tiempo y que las condiciones de xyz_punto_ref sean utiles
 */
 #include "ros/ros.h"
-#include "geometry_msgs/Point.h"
 #include "geometry_msgs/Twist.h"
 #include <cmath>
 
@@ -18,7 +16,7 @@ double step = 0.01;
 
 // Funciones de referencia
 double x_punto_ref(double t) {
-    if (t < 5) {
+    if (t > 0  && t < 5) {
         return 0;
     } else if (t >= 5 && t <= 65) {
         return 0.5 * sin(0.1 * (t - 5));
@@ -28,7 +26,7 @@ double x_punto_ref(double t) {
 }
 
 double y_punto_ref(double t) {
-    if (t < 5) {
+    if (t > 0  && t < 5) {
         return 0;
     } else if (t >= 5 && t <= 65) {
         return 0.5 * cos(0.1 * (t - 5));
@@ -38,7 +36,7 @@ double y_punto_ref(double t) {
 }
 
 double z_punto_ref(double t) {
-    if (t < 5) {
+    if (t > 0  && t < 5) {
         return -0.5;
     }
    else {
@@ -47,7 +45,7 @@ double z_punto_ref(double t) {
 }
 
 double yaw_punto_ref(double t) {
-    if (t < 5) {
+    if (t > 0  && t < 5) {
         return 0;
     } else {
         return 0.1;
@@ -58,15 +56,25 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "ref");
     ros::NodeHandle nh;
 
-    ros::Publisher position_pub = nh.advertise<geometry_msgs::Twist>("/desired_position", 100);
-    ros::Publisher velocity_pub = nh.advertise<geometry_msgs::Twist>("/desired_velocity", 100);
+    ros::Publisher position_pub = nh.advertise<geometry_msgs::Twist>("/pos_des", 100);
+    ros::Publisher velocity_pub = nh.advertise<geometry_msgs::Twist>("/vels_des", 100);
 
     ros::Rate loop_rate(100); 
 
     double t = 0;
-    while (ros::ok()) {
+    while (ros::ok()) {`
         geometry_msgs::Twist vels_des;
         geometry_msgs::Twist pos_des;
+
+        // Condiciones iniciales 
+        if (t == 0) {
+            x_des = -5;
+            y_des = 0;
+            z_des = 0;
+            yaw_des = 0;
+            roll_des = 0;
+            pitch_des = 0;
+        }
 
         // Calcular las referencias de velocidades (roll y pitch = 0)
         double x_punto_des = x_punto_ref(t);
