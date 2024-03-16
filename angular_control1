@@ -1,32 +1,60 @@
 /*              NODO DE CONTROL ANGULAR 
-Este nodo recibe posiciones angulares deseadas (roll, pitch y yaw), velocidades angulares deseadas orientacion del dorne y velocidad angulare real del drone. Con ello calcula los torques necsarios para la dinamico.
+Este nodo recibe posiciones angulares deseadas (roll, pitch y yaw), velocidades angulares deseadas orientacion del dorne y velocidad angulare real del drone. 
+Con ello calcula los torques necsarios para la dinamico.
+***FALTA CHECAR ANG_D POR YAW
 */
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
+#include "geometry_msgs/Vector3.h"
 #include <cmath>
 #include <eigen3/Eigen/Dense>
 
-// Funcion callback para mensajes del topico pos_des
-void posDesCallback(const geometry_msgs::Vector3::ConstPtr& msg)
+// Declaración de variables globales
+Eigen::Vector3d ang_d; // Posiciones angulares deseadas
+Eigen::Vector3d ang_punto_d; // Velocidades angulares deseadas
+Eigen::Vector3d rot_r; // Rotaciones reales
+Eigen::Vector3d rot_punto_r; // Velocidades angulares reales
+
+// Ganancias del controlador PD angular virtual 
+double kpx = 10;
+double kpy = 10;
+double kpz = 10;
+double kdx = 10;
+double kdy = 10;
+double kdz = 10;
+
+// Inercias
+double jxx = 0.0411;
+double jyy = 0.0478;
+double jzz = 0.0599;
+// roll, pitch y yaw dos puntos = 0
+int roll2 = 0;
+int pitch2 = 0;
+int yaw2 = 0;
+
+// Funcion callback para mensajes del topico pos_des angulares
+void angDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
-  Eigen::Vector3d pos_d;
-  pos_d << msg->x, msg->y, msg->z;
+  ang_d << msg->angular.x, msg->angular.y, msg->angular.z;
 }
 
-// Funcion callback para mensajes del topico vels_des
-void velsDesCallback(const geometry_msgs::Vector3::ConstPtr& msg)
+// Funcion callback para mensajes del topico vels_des angulares
+void velsDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
-  Eigen::Vector3d vels_d;
-  vels_d << msg->x, msg->y, msg->z;
+  ang_punto_d << msg->angular.x, msg->angular.y, msg->angular.z;
 }
 
-// Funcion callback para mensajes del topico rot_real
-void rotRealCallback(const geometry_msgs::Vector3::ConstPtr& msg)
+// Funcion callback para mensajes del topico pos_real
+void rotRealCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
-  Eigen::Vector3d rot;
-  rot << msg->x, msg->y, msg->z;
+  rot_r << msg->angular.x, msg->angular.y, msg->angular.z;
 }
 
+// Funcion callback para mensajes del topico vels_real
+void rot_puntoRealCallback(const geometry_msgs::Twist::ConstPtr& msg)
+{
+  rot_punto_r << msg->angular.x, msg->angular.y, msg->angular.z;
+}
 
 int main(int argc, char **argv)
 {
@@ -34,22 +62,49 @@ int main(int argc, char **argv)
   ros::NodeHandle nh3;
 
   // Subscripcion al topico de posicion angular deseada 
-  ros::Subscriber pos_des_sub = nh3.subscribe("pos_des", 100, posDesCallback);
+  ros::Subscriber ang_des_sub = nh3.subscribe("/ang_des", 100, angDesCallback);
 
   // Subscripcion al topico de velocidad angular deseada
-  ros::Subscriber vels_des_sub = nh3.subscribe("vels_des", 100, velsDesCallback);
+  ros::Subscriber vels_des_sub = nh3.subscribe("/vels_des", 100, velsDesCallback);
 
   // Subscripcion al topico de pitch, roll y yaw calculados en el control de posicion lineal
-  ros::Subscriber rot_sub = nh3.subscribe("rot_real", 100, rotRealCallback);
+  ros::Subscriber pos_real_sub = nh3.subscribe("/pos_real", 100, rotRealCallback);
+
+  // Subscripcion al topico de pitch, roll y yaw calculados en el control de posicion lineal
+  ros::Subscriber vels_real_sub = nh3.subscribe("/vels_real", 100, rot_puntoRealCallback);
+
+  // Creación del publicador para los torques
+  ros::Publisher torque_pub = nh3.advertise<geometry_msgs::Vector3>("/torque", 100);
 
   ros::Rate loop_rate(100);
-  double t = 0;
+
   while(ros::ok){
-    // Calculos de torques deseados 
+    // Calculos de errores
+    double ex_ang = rot_r(0) - ang_d(0); 
+    double ey_ang = rot_r(1) - ang_d(1);
+    double ez_ang = rot_r(2) - ang_d(2);  
+    double ex_punto_ang = rot_punto_r(0) - ang_punto_d(0);
+    double ey_punto_ang = rot_punto_r(1) - ang_punto_d(1);
+    double ez_punto_ang = rot_punto_r(2) - ang_punto_d(2);
+
+    //Controladores virtuales
+    double ux = -kpx*ex_ang - kdx*ex_punto_ang;
+    double uy = -kpy*ey_ang - kdy*ey_punto_ang;
+    double uz = -kpz*ez_ang - kdz*ez_punto_ang;
+
+    //Calculo de torques
+    double Tx = jxx * (((jzz - jyy) / jxx * rot_punto_r(1) * rot_punto_r(2)) + roll2 + ux);
+    double Ty = jyy * (((jxx - jzz) / jyy * rot_punto_r(0) * rot_punto_r(2)) + pitch2 + uy);
+    double Tz = jzz * (((jyy - jxx) / jzz * rot_punto_r(0) * rot_punto_r(1)) + yaw2 + uz);
+
+    // Publicar posiciones y yaw
+    torque.x = Tx;
+    torque.y = Ty;
+    torque.z = Tz;
+    torque_pub.publish(pos_des);
 
     ros::spinOnce();
     loop_rate.sleep();
-    t += loop_rate.expectedCycleTime().toSec(); // Incrementa el tiempo en función de la frecuencia, si no sirve cambiar a t+=0.01;
   }
 
   return 0;
