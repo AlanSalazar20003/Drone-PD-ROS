@@ -6,11 +6,25 @@ Este nodo recibe posiciones angulares deseadas (roll, pitch y yaw), velocidades 
 #include <cmath>
 #include <eigen3/Eigen/Dense>
 
-// Funcion callback para mensajes del topico rot_des
-void rotDesCallback(const geometry_msgs::Vector3::ConstPtr& msg)
+// Funcion callback para mensajes del topico pos_des
+void posDesCallback(const geometry_msgs::Vector3::ConstPtr& msg)
 {
-  Eigen::Vector3d rot_des;
-  rot_des << msg->x, msg->y, msg->z;
+  Eigen::Vector3d pos_d;
+  pos_d << msg->x, msg->y, msg->z;
+}
+
+// Funcion callback para mensajes del topico vels_des
+void velsDesCallback(const geometry_msgs::Vector3::ConstPtr& msg)
+{
+  Eigen::Vector3d vels_d;
+  vels_d << msg->x, msg->y, msg->z;
+}
+
+// Funcion callback para mensajes del topico rot_real
+void rotRealCallback(const geometry_msgs::Vector3::ConstPtr& msg)
+{
+  Eigen::Vector3d rot;
+  rot << msg->x, msg->y, msg->z;
 }
 
 
@@ -20,13 +34,13 @@ int main(int argc, char **argv)
   ros::NodeHandle nh3;
 
   // Subscripcion al topico de posicion angular deseada 
-  ros::Subscriber sub = nh3.subscribe("pos_des", 100, rotDesCallback);
+  ros::Subscriber pos_des_sub = nh3.subscribe("pos_des", 100, posDesCallback);
 
   // Subscripcion al topico de velocidad angular deseada
-  ros::Subscriber sub = nh3.subscribe("vels_des", 100, rotDesCallback);
+  ros::Subscriber vels_des_sub = nh3.subscribe("vels_des", 100, velsDesCallback);
 
   // Subscripcion al topico de pitch, roll y yaw calculados en el control de posicion lineal
-  ros::Subscriber sub = nh3.subscribe("rot_des", 100, rotDesCallback);
+  ros::Subscriber rot_sub = nh3.subscribe("rot_real", 100, rotRealCallback);
 
   ros::Rate loop_rate(100);
   double t = 0;
