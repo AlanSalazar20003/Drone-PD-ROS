@@ -96,6 +96,12 @@ int main(int argc, char **argv) {
 
         ros::spinOnce();
         loop_rate.sleep();
+
+        // Reiniciar el tiempo si t > 65
+        if (t > 65) {
+            t = 0;
+        }
+        
         t += loop_rate.expectedCycleTime().toSec(); // Incrementa el tiempo en función de la frecuencia, si no sirve cambiar a t+=0.01;
     }
 
