@@ -7,9 +7,9 @@ Este nodo envia la posicion, velocidad deseadas (lineales y angulares), incluyen
 #include <cmath>
 
 // Variables globales para las posiciones iniciales
-double x_des = -5;
-double y_des = 0, z_des = 0;
-double yaw_des = 0, roll_des = 0, pitch_des = 0;
+double x_des;
+double y_des, z_des;
+double yaw_des, roll_des, pitch_des;
 
 // Step para integraciones numericas
 double step = 0.01;
