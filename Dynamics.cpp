@@ -64,6 +64,7 @@ int main(int argc, char**argv)
     inv_inercias = inercias.inverse();
     e3 << 0,0,1;
     v << 0,0,0;
+    posicion << 0,0,0;
 
     ros::init(argc, argv, "Dynamics"); //Declarar subscriptor
     ros::NodeHandle nh4; //Inicializar nodo
@@ -103,7 +104,9 @@ int main(int argc, char**argv)
         v_real.angular.y = thpunto(1);
         v_real.angular.z = thpunto(2);
 
-
+        std::cout << posicion << std::endl;
+        std::cout << "----------" << std::endl;
+        std::cout << vinercial << std::endl;
 
         posicion_pub.publish(p_real);
         velocidad_pub.publish(v_real);
@@ -115,7 +118,7 @@ int main(int argc, char**argv)
 //------Calculo de matriz de rotacion, r2 y matriz de rotacion transpuesta------
 void c_matrix()
 {
-    r2 << 1, sin(theta(0))*tan(theta(1)), cos(theta(0))*tan(theta(1)), 0, cos(theta(0)), -sin(theta(0)), 0, sin(theta(0))/theta(omega(1)), cos(theta(0))/theta(omega(1));
+    r2 << 1, sin(theta(0))*tan(theta(1)), cos(theta(0))*tan(theta(1)), 0, cos(theta(0)), -sin(theta(0)), 0, sin(theta(0))/cos(theta(1)), cos(theta(0))/cos(theta(1));
     rotacion << cos(theta(2))*cos(theta(1)), cos(theta(2))*sin(theta(0))*sin(theta(1))-cos(theta(0))*sin(theta(2)), sin(theta(2))*sin(theta(0))+cos(theta(2))*cos(theta(0))*sin(theta(1)),
             cos(theta(1))*sin(theta(2)), cos(theta(2))*cos(theta(0))+sin(theta(2))*sin(theta(0))*sin(theta(1)), cos(theta(0))*sin(theta(2))*sin(theta(1))-cos(theta(2))*sin(theta(0)),
            -sin(theta(1)), cos(theta(1))*sin(theta(0)), cos(theta(0))*cos(theta(1));
