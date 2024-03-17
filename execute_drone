@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="drone" type="ref_node" name="ref_node" output="screen" />
+    <node pkg="drone" type="linear_control_node" name="linear_control_node" output="screen" />
+    <node pkg="drone" type="angular_control_node" name="angular_control_node" output="screen" />
+    <node pkg="drone" type="Dynamics_node" name="Dynamics_node" output="screen" />
+</launch>
