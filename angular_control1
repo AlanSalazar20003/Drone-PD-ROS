@@ -1,7 +1,6 @@
 /*              NODO DE CONTROL ANGULAR 
 Este nodo recibe posiciones angulares deseadas (roll, pitch y yaw), velocidades angulares deseadas orientacion del dorne y velocidad angulare real del drone. 
 Con ello calcula los torques necsarios para la dinamico.
-***FALTA CHECAR ANG_D POR YAW
 */
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
@@ -16,12 +15,12 @@ Eigen::Vector3d rot_r; // Rotaciones reales
 Eigen::Vector3d rot_punto_r; // Velocidades angulares reales
 
 // Ganancias del controlador PD angular virtual 
-double kpx = 10;
-double kpy = 10;
-double kpz = 10;
-double kdx = 10;
-double kdy = 10;
-double kdz = 10;
+double kpx = 8;
+double kpy = 8;
+double kpz = 8;
+double kdx = 8;
+double kdy = 8;
+double kdz = 8;
 
 // Inercias
 double jxx = 0.0411;
@@ -117,4 +116,3 @@ int main(int argc, char **argv)
 
   return 0;
 }
-
