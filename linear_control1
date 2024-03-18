@@ -8,7 +8,7 @@ Este nodo recibe posiciones angulares deseadas (roll, pitch y yaw), velocidades 
 #include <cmath>
 #include <eigen3/Eigen/Dense>
 
-//Declaracion de la variable de la masa
+//Declaracion de la variable de la masas
 const float m = 2.0;
 
 //Declaracion de variables de error
@@ -30,8 +30,8 @@ float x_punto_real, y_punto_real, z_punto_real, yaw_punto_real;
 float x_control,y_control,z_control;
 
 //Declaracion de las constantes de control
-float kpx,kpy,kpz = 1;
-float kdx,kdy,kdz = 1;
+float kpx,kpy,kpz = 2;
+float kdx,kdy,kdz = 2;
 
 //Declaracion de las constantes de control
 float z_dos = 9.81;
@@ -82,25 +82,25 @@ void velRealCallback(const geometry_msgs::Twist::ConstPtr& msg)
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "linear_control");
-    ros::NodeHandle nh3;
+    ros::NodeHandle nh2;
 
     // Subscripcion al topico de posicion angular deseada 
-    ros::Subscriber pos_sub = nh3.subscribe("/pos_des", 100, posDesCallback);
+    ros::Subscriber pos_sub = nh2.subscribe("/pos_des", 100, posDesCallback);
 
     // Subscripcion al topico de velocidad angular deseada
-    ros::Subscriber vels_sub = nh3.subscribe("/vels_des", 100, velsDesCallback);
+    ros::Subscriber vels_sub = nh2.subscribe("/vels_des", 100, velsDesCallback);
 
     // Subscripcion al topico de posiciones reales
-    ros::Subscriber pos_real_sub = nh3.subscribe("/pos_real", 100, posRealCallback);
+    ros::Subscriber pos_real_sub = nh2.subscribe("/pos_real", 100, posRealCallback);
     
     // Subscripcion al topico de velocidades reales
-    ros::Subscriber vels_real_sub = nh3.subscribe("/vels_real", 100, velRealCallback);
+    ros::Subscriber vels_real_sub = nh2.subscribe("/vels_real", 100, velRealCallback);
 
     // Publicacion del valor del thrust al topico "thrust"
-    ros::Publisher thrust_pub = nh3.advertise<std_msgs::Float32>("/thrust", 100);
+    ros::Publisher thrust_pub = nh2.advertise<std_msgs::Float32>("/thrust", 100);
 
     // Publicacion de Pitch y Roll deseados
-    ros::Publisher angulos_pub = nh3.advertise<geometry_msgs::Twist>("/ang_des", 100);
+    ros::Publisher angulos_pub = nh2.advertise<geometry_msgs::Twist>("/ang_des", 100);
 
     std_msgs::Float32 propulsion;
     geometry_msgs::Twist angulos;
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
         y_punto_err = y_punto_real - y_punto_des; // Y punto
         z_punto_err = z_punto_real - z_punto_des; // Z punto
 
-        //Claculos del control 
+        //Calaculos del control 
         x_control = -kpx*x_err - kdx*x_punto_err; //Control en X
         y_control = -kpy*y_err - kdy*y_punto_err; //Control en Y
         z_control = -kpz*z_err - kdz*z_punto_err; //Control en Z
