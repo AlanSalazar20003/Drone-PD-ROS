@@ -105,9 +105,9 @@ int main(int argc, char**argv)
         v_real.angular.y = thpunto(1);
         v_real.angular.z = thpunto(2);
 
-        std::cout << posicion << std::endl;
+        //std::cout << torques << std::endl;
         std::cout << "----------" << std::endl;
-        std::cout << vinercial << std::endl;
+        std::cout << Th << std::endl;
 
         posicion_pub.publish(p_real);
         velocidad_pub.publish(v_real);
@@ -125,7 +125,7 @@ void c_matrix()
     rotacion << cos(theta(2))*cos(theta(1)), cos(theta(2))*sin(theta(0))*sin(theta(1))-cos(theta(0))*sin(theta(2)), sin(theta(2))*sin(theta(0))+cos(theta(2))*cos(theta(0))*sin(theta(1)),
             cos(theta(1))*sin(theta(2)), cos(theta(2))*cos(theta(0))+sin(theta(2))*sin(theta(0))*sin(theta(1)), cos(theta(0))*sin(theta(2))*sin(theta(1))-cos(theta(2))*sin(theta(0)),
            -sin(theta(1)), cos(theta(1))*sin(theta(0)), cos(theta(0))*cos(theta(1));
-    rot_trans = rotacion.inverse();
+    rot_trans = rotacion.transpose();
 }
 
 //---------Dinamica Angular--------
