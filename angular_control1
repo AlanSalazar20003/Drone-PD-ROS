@@ -9,10 +9,8 @@ Con ello calcula los torques necsarios para la dinamico.
 #include <eigen3/Eigen/Dense>
 
 // Declaración de variables globales
-Eigen::Vector3d ang_d; // Posiciones angulares deseadas
-Eigen::Vector3d ang_punto_d; // Velocidades angulares deseadas
-Eigen::Vector3d rot_r; // Rotaciones reales
-Eigen::Vector3d rot_punto_r; // Velocidades angulares reales
+double roll, pitch, yaw, rollp, pitchp, yawp;
+double roll_d, pitch_d, yaw_d, rollp_d, pitchp_d, yawp_d;
 
 // Ganancias del controlador PD angular virtual 
 double kpx = 8;
@@ -34,30 +32,36 @@ int yaw2 = 0;
 // Funcion callback para mensajes del topico pos_des angulares
 void pitchRollDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
-    ang_d(0) = msg->angular.x;
-    ang_d(1) = msg->angular.y;
+    roll_d = msg->angular.x;
+    pitch_d = msg->angular.y;
 }
 void yawDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
-    ang_d(2) = msg->angular.z;
+    yaw_d = msg->angular.z;
 }
 
 // Funcion callback para mensajes del topico vels_des angulares
 void velsDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
-  ang_punto_d << msg->angular.x, msg->angular.y, msg->angular.z;
+  rollp_d = msg->angular.x;
+  pitchp_d = msg->angular.y;
+  yawp_d = msg->angular.z;
 }
 
 // Funcion callback para mensajes del topico pos_real
 void rotRealCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
-  rot_r << msg->angular.x, msg->angular.y, msg->angular.z;
+  roll = msg->angular.x;
+  pitch = msg->angular.y;
+  yaw = msg->angular.z;
 }
 
 // Funcion callback para mensajes del topico vels_real
 void rot_puntoRealCallback(const geometry_msgs::Twist::ConstPtr& msg)
 {
-  rot_punto_r << msg->angular.x, msg->angular.y, msg->angular.z;
+  rollp = msg->angular.x;
+  pitchp = msg->angular.y;
+  yawp = msg->angular.z;
 }
 
 int main(int argc, char **argv)
@@ -87,12 +91,12 @@ int main(int argc, char **argv)
     geometry_msgs::Vector3 torque_var;
 
     // Calculos de errores
-    double ex_ang = rot_r(0) - ang_d(0); 
-    double ey_ang = rot_r(1) - ang_d(1);
-    double ez_ang = rot_r(2) - ang_d(2);  
-    double ex_punto_ang = rot_punto_r(0) - ang_punto_d(0);
-    double ey_punto_ang = rot_punto_r(1) - ang_punto_d(1);
-    double ez_punto_ang = rot_punto_r(2) - ang_punto_d(2);
+    double ex_ang = roll - roll_d; 
+    double ey_ang = pitch - pitch_d;
+    double ez_ang = yaw - yaw_d;  
+    double ex_punto_ang = rollp - rollp_d;
+    double ey_punto_ang = pitchp - pitchp_d;
+    double ez_punto_ang = yawp - yawp_d;
 
     //Controladores virtuales
     double ux = -kpx*ex_ang - kdx*ex_punto_ang;
@@ -100,9 +104,9 @@ int main(int argc, char **argv)
     double uz = -kpz*ez_ang - kdz*ez_punto_ang;
 
     //Calculo de torques
-    double Tx = jxx * (((jzz - jyy) / jxx * rot_punto_r(1) * rot_punto_r(2)) + roll2 + ux);
-    double Ty = jyy * (((jxx - jzz) / jyy * rot_punto_r(0) * rot_punto_r(2)) + pitch2 + uy);
-    double Tz = jzz * (((jyy - jxx) / jzz * rot_punto_r(0) * rot_punto_r(1)) + yaw2 + uz);
+    double Tx = jxx * (((jzz - jyy) / jxx * pitchp * yawp) + roll2 + ux);
+    double Ty = jyy * (((jxx - jzz) / jyy * rollp * yawp) + pitch2 + uy);
+    double Tz = jzz * (((jyy - jxx) / jzz * rollp * pitchp) + yaw2 + uz);
 
     // Publicar torques
     torque_var.x = Tx;
