@@ -79,6 +79,7 @@ int main(int argc, char**argv)
 
     while(ros::ok())
     {
+        ros::spinOnce();
         c_matrix();
         c_omegapunto();
         c_omega();
@@ -110,6 +111,8 @@ int main(int argc, char**argv)
 
         posicion_pub.publish(p_real);
         velocidad_pub.publish(v_real);
+
+        loop_rate.sleep();
     }
 
     return 0;
@@ -122,18 +125,18 @@ void c_matrix()
     rotacion << cos(theta(2))*cos(theta(1)), cos(theta(2))*sin(theta(0))*sin(theta(1))-cos(theta(0))*sin(theta(2)), sin(theta(2))*sin(theta(0))+cos(theta(2))*cos(theta(0))*sin(theta(1)),
             cos(theta(1))*sin(theta(2)), cos(theta(2))*cos(theta(0))+sin(theta(2))*sin(theta(0))*sin(theta(1)), cos(theta(0))*sin(theta(2))*sin(theta(1))-cos(theta(2))*sin(theta(0)),
            -sin(theta(1)), cos(theta(1))*sin(theta(0)), cos(theta(0))*cos(theta(1));
-    rot_trans = rotacion.transpose();
+    rot_trans = rotacion.inverse();
 }
 
 //---------Dinamica Angular--------
 void c_omegapunto() //Aceleracion angular local 
 {
-    opunto = inv_inercias*(torques - omega.cross((inercias*omega)));
+    opunto = inv_inercias*(torques - (omega.cross((inercias*omega))));
 }
 
 void c_omega() //Velocidad angular local
 {
-    omega = omega + step*opunto;
+    omega = omega + (step*opunto);
 }
 
 void c_thetapunto() //Velocdiad angular inercial
@@ -149,7 +152,7 @@ void c_theta() //Calculo de posicion angular
 //--------Dinamica Lineal--------
 void c_fuerza()
 {
-    f = Th*e3 + rot_trans*mass*g*e3;
+    f = (Th*e3) + (rot_trans*mass*g*e3);
 }
 
 void c_vlineal()
@@ -159,7 +162,7 @@ void c_vlineal()
 
 void c_v()
 {
-    v = v + step*vpunto;
+    v = v + (step*vpunto);
 }
 
 void c_vinercial()
@@ -169,5 +172,5 @@ void c_vinercial()
 
 void c_posicion()
 {
-    posicion = posicion + step*vinercial;
+    posicion = posicion + (step*vinercial);
 }
