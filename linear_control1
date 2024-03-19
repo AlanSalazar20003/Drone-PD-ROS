@@ -34,8 +34,8 @@ double roll_prev;
 double pitch_prev;
 
 //Declaracion de las constantes de control
-double kpx = 0.05;
-double kpy = 0.05;
+double kpx = 0.1;
+double kpy = 0.1;
 double kpz = 0.0001;
 double kdx = 0.5;
 double kdy = 0.5;
