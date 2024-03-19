@@ -17,9 +17,9 @@ Eigen::Vector3d rot_punto_r; // Velocidades angulares reales
 
 
 // Ganancias del controlador PD angular virtual 
-double kpx = 0.1;
-double kpy = 0.1;
-double kpz = 0.1;
+double kpx = 2;
+double kpy = 2;
+double kpz = 2;
 double kdx = 1;
 double kdy = 1;
 double kdz = 1;
