@@ -1,0 +1,7 @@
+<launch>
+
+	
+	<node pkg="drone_pck" type="quad_gazebo_node" name="quad_gazebo_node"  />
+	
+
+</launch>
