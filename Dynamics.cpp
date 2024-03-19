@@ -6,21 +6,11 @@
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float32.h>
 
-void c_matrix();
-void c_omegapunto();
-void c_omega();
-void c_thetapunto();
-void c_theta();
-void c_fuerza();
-void c_vlineal();
-void c_v();
-void c_vinercial();
-void c_posicion();
-
 Eigen::Matrix3d inercias; //Matriz de inercias
 Eigen::Matrix3d inv_inercias; //Matriz inversa de inercias
 Eigen::Matrix3d rotacion; // Matriz de rotacion
 Eigen::Matrix3d rot_trans; //Matriz de rotacion transpuesta
+Eigen::Matrix3d rot_inver;
 Eigen::Matrix3d r2; 
 
 Eigen::Vector3d theta; //Vector de posiciones angulares inerciales
@@ -39,15 +29,29 @@ double Th = 0; //Thrust
 double step = 0.01;
 double mass = 2;
 double g = 9.81;
+double tx;
+double ty;
+double tz;
 
 geometry_msgs::Twist p_real;
 geometry_msgs::Twist v_real;
 
+void c_matrix();
+void c_omegapunto();
+void c_omega();
+void c_thetapunto();
+void c_theta();
+void c_fuerza();
+void c_vlineal();
+void c_v();
+void c_vinercial();
+void c_posicion();
+
 void torquesCallback(const geometry_msgs::Vector3::ConstPtr& torq) //Obtener datos de torque
 {
-    torques(0) = torq -> x;
-    torques(1) = torq -> y;
-    torques(2) = torq -> z;
+    tx = torq -> x;
+    ty = torq -> y;
+    tz = torq -> z;
 }
 
 void thrustCallback(const std_msgs::Float32::ConstPtr& th) //Obtener datos de Thrust
@@ -60,22 +64,52 @@ int main(int argc, char**argv)
     omega << 0,0,0;
     theta << 0,0,0;
     thpunto << 0,0,0;
-    inercias <<0.0411,0,0,0,0.0478,0,0,0,0.0599;
+    inercias <<0.0411,0,0,
+              0,0.0478,0,0,
+              0,0.0599;
     inv_inercias = inercias.inverse();
     e3 << 0,0,1;
     v << 0,0,0;
-    posicion << 0,0,0;
+    posicion << -5,0,0;
 
     ros::init(argc, argv, "Dynamics"); //Declarar subscriptor
     ros::NodeHandle nh4; //Inicializar nodo
 
-    ros::Subscriber torque_sub = nh4.subscribe("/torque", 100, &torquesCallback); //Suscribirse a nodo de torque
+    ros::Subscriber torque_sub = nh4.subscribe("/torques", 100, &torquesCallback); //Suscribirse a nodo de torque
     ros::Subscriber thrust_sub = nh4.subscribe("/thrust", 100, &thrustCallback);
 
     ros::Publisher posicion_pub = nh4.advertise<geometry_msgs::Twist>("/pos_real", 10); //Inicializar publisher
     ros::Publisher velocidad_pub = nh4.advertise<geometry_msgs::Twist>("/vels_real", 10);
 
     ros::Rate loop_rate(100);
+
+    void c_matrix();
+    void c_omegapunto();
+    void c_omega();
+    void c_thetapunto();
+    void c_theta();
+    void c_fuerza();
+    void c_vlineal();
+    void c_v();
+    void c_vinercial();
+    void c_posicion();
+
+    p_real.linear.x = posicion(0),
+    p_real.linear.y = posicion(1);
+    p_real.linear.z = posicion(2);
+    p_real.angular.x = theta(0);
+    p_real.angular.y = theta(1);
+    p_real.angular.z = theta(2);
+
+    v_real.linear.x = vinercial(0);
+    v_real.linear.y = vinercial(1);
+    v_real.linear.z = vinercial(2);
+    v_real.angular.x = thpunto(0);
+    v_real.angular.y = thpunto(1);
+    v_real.angular.z = thpunto(2);
+
+    posicion_pub.publish(p_real);
+    velocidad_pub.publish(v_real);
 
     while(ros::ok())
     {
@@ -105,14 +139,16 @@ int main(int argc, char**argv)
         v_real.angular.y = thpunto(1);
         v_real.angular.z = thpunto(2);
 
-        //std::cout << torques << std::endl;
+        std::cout << "==========" << std::endl;
+        std::cout << torques << std::endl;
         std::cout << "----------" << std::endl;
-        std::cout << Th << std::endl;
+        std::cout << posicion << std::endl;
 
         posicion_pub.publish(p_real);
         velocidad_pub.publish(v_real);
 
         loop_rate.sleep();
+        ros::spinOnce();
     }
 
     return 0;
@@ -121,22 +157,26 @@ int main(int argc, char**argv)
 //------Calculo de matriz de rotacion, r2 y matriz de rotacion transpuesta------
 void c_matrix()
 {
-    r2 << 1, sin(theta(0))*tan(theta(1)), cos(theta(0))*tan(theta(1)), 0, cos(theta(0)), -sin(theta(0)), 0, sin(theta(0))/cos(theta(1)), cos(theta(0))/cos(theta(1));
+    r2 << 1, sin(theta(0))*tan(theta(1)), cos(theta(0))*tan(theta(1)),
+            0, cos(theta(0)), -sin(theta(0)), 0, 
+            sin(theta(0))/cos(theta(1)), cos(theta(0))/cos(theta(1));
     rotacion << cos(theta(2))*cos(theta(1)), cos(theta(2))*sin(theta(0))*sin(theta(1))-cos(theta(0))*sin(theta(2)), sin(theta(2))*sin(theta(0))+cos(theta(2))*cos(theta(0))*sin(theta(1)),
             cos(theta(1))*sin(theta(2)), cos(theta(2))*cos(theta(0))+sin(theta(2))*sin(theta(0))*sin(theta(1)), cos(theta(0))*sin(theta(2))*sin(theta(1))-cos(theta(2))*sin(theta(0)),
            -sin(theta(1)), cos(theta(1))*sin(theta(0)), cos(theta(0))*cos(theta(1));
     rot_trans = rotacion.transpose();
+    rot_inver = rotacion.inverse();
 }
 
 //---------Dinamica Angular--------
 void c_omegapunto() //Aceleracion angular local 
 {
+    torques << tx,ty,tz;
     opunto = inv_inercias*(torques - (omega.cross((inercias*omega))));
 }
 
 void c_omega() //Velocidad angular local
 {
-    omega = omega + (step*opunto);
+    omega += (step*opunto);
 }
 
 void c_thetapunto() //Velocdiad angular inercial
@@ -146,7 +186,7 @@ void c_thetapunto() //Velocdiad angular inercial
 
 void c_theta() //Calculo de posicion angular 
 {
-    theta = theta + step*thpunto;
+    theta += step*thpunto;
 }
 
 //--------Dinamica Lineal--------
@@ -162,7 +202,7 @@ void c_vlineal()
 
 void c_v()
 {
-    v = v + (step*vpunto);
+    v += (step*vpunto);
 }
 
 void c_vinercial()
@@ -172,5 +212,5 @@ void c_vinercial()
 
 void c_posicion()
 {
-    posicion = posicion + (step*vinercial);
+    posicion += (step*vinercial);
 }
