@@ -1,6 +1,6 @@
-/*              NODO DE CONTROL LINEAL
-Este nodo recibe posiciones angulares deseadas (roll, pitch y yaw), velocidades angulares deseadas orientacion del dorne y velocidad angulare real del drone. Con ello calcula los torques necsarios para la dinamico.
-*/
+//          NODO DE CONTROL LINEAL
+//Este nodo recibe posiciones angulares deseadas (roll, pitch y yaw), velocidades angulares deseadas orientacion del dorne y velocidad angulare real del drone. Con ello calcula los torques necsarios para la dinamico.
+
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
 #include "geometry_msgs/Vector3.h"
@@ -9,36 +9,43 @@ Este nodo recibe posiciones angulares deseadas (roll, pitch y yaw), velocidades 
 #include <eigen3/Eigen/Dense>
 
 //Declaracion de la variable de la masas
-const float m = 2.0;
+const double m = 2.0;
 
 //Declaracion de variables de error
-float x_err, y_err, z_err,yaw_err, x_punto_err,y_punto_err,z_punto_err,yaw_punto_err;
+double x_err, y_err, z_err,yaw_err, x_punto_err,y_punto_err,z_punto_err,yaw_punto_err;
 
 //Declaracionn de variables de las posiciones deseadas
-float x_des,y_des,z_des, yaw_des;
+double x_des,y_des,z_des, yaw_des;
 
 //Declaracionn de variables de velocidades deseadas
-float x_punto_des, y_punto_des, z_punto_des, yaw_punto_des;
+double x_punto_des, y_punto_des, z_punto_des, yaw_punto_des;
 
 //Declaracioin de variables de posicion reales
-float x_real,y_real,z_real,roll_real,pitch_real,yaw_real;
+double x_real,y_real,z_real,roll_real,pitch_real,yaw_real;
 
 //Declaracion de variables de velocidad real
-float x_punto_real, y_punto_real, z_punto_real, yaw_punto_real;
+double x_punto_real, y_punto_real, z_punto_real, yaw_punto_real;
 
 //Declaracion de las variables de control
-float x_control,y_control,z_control;
+double x_control,y_control,z_control;
+
+//Variables para evitar errores
+double roll_prev;
+double pitch_prev;
 
 //Declaracion de las constantes de control
-float kpx,kpy,kpz = 2;
-float kdx,kdy,kdz = 2;
+double kpx = 0.05;
+double kpy = 0.05;
+double kpz = 0.0001;
+double kdx = 0.5;
+double kdy = 0.5;
+double kdz = 0.5;
 
-//Declaracion de las constantes de control
-float z_dos = 9.81;
-float g = 9.81;
+double z_dos = 0;
+double g = 9.81;
 
 //Declaracion de las variables de salida
-float roll_des,pitch_des,thrust;
+double roll_des,pitch_des,thrust;
 
 // Funcion callback para mensajes del topico pos_des
 void posDesCallback(const geometry_msgs::Twist::ConstPtr& msg)
@@ -124,25 +131,47 @@ int main(int argc, char **argv)
 
         //THRUST
         thrust = (m/(cos(roll_real)*cos(pitch_real)))*(z_dos - g + z_control);
+        if(thrust>0)
+        {
+            thrust = 0;
+        }
+        else if(thrust < -30)
+        {
+            thrust = -30;
+        }
         propulsion.data = thrust;
         thrust_pub.publish(propulsion);
 
         //ROLL DESEADA
-        roll_des = asin((m/thrust)*(sin(yaw_des)*x_control - cos(yaw_des)*y_control));
+        roll_prev = (m/thrust)*(sin(yaw_des)*x_control - cos(yaw_des)*y_control);
+        if (roll_prev>1)
+        {
+            roll_prev=1;
+        }
+        else if(roll_prev<-1)
+        {
+            roll_prev=-1;
+        }
+        roll_des = asin(roll_prev);
         angulos.angular.x = roll_des;
 
         //PITCH DESEADA
-        pitch_des = asin(((m/thrust)*x_control - sin(yaw_des)*sin(roll_des))/cos(yaw_des)*cos(roll_des));
+        pitch_prev = ((m/thrust)*x_control - sin(yaw_des)*sin(roll_des))/cos(yaw_des)*cos(roll_des);
+        if (pitch_prev>1)
+        {
+            pitch_prev = 1;
+        }
+        else if(pitch_prev<-1)
+        {
+            pitch_prev = -1;
+        }
+        pitch_des = asin(pitch_prev);
         angulos.angular.y = pitch_des;
         angulos_pub.publish(angulos);
 
     ros::spinOnce();
     loop_rate.sleep();
-    t += loop_rate.expectedCycleTime().toSec(); // Incrementa el tiempo en función de la frecuencia, si no sirve cambiar a t+=0.01;
-  }
-
-  return 0;
-}
+    }
 
   return 0;
 }
